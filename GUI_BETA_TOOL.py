@@ -145,7 +145,7 @@ class Adder(ttk.Frame):
     def collectValues(self):
 
         frameScatPlot = Frame(self)
-        frameScatPlot.grid(column=0, row=24, columnspan=100, sticky=Tkconstants.NSEW)
+        frameScatPlot.grid(column=0, row=25, columnspan=100, sticky=Tkconstants.NSEW)
         frameScatPlot.rowconfigure(50, weight=100)
         frameScatPlot.columnconfigure(1, weight=1)
 
@@ -162,28 +162,20 @@ class Adder(ttk.Frame):
         self.draw_Scatt_Plot(frameScatPlot,featureList,n)
 
     def draw_Scatt_Plot(self,frameScatPlot,featureList,n):
-        fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(n*4, 3))
-        i=1
-        F10 = MinMaxScaler().fit_transform(featureList[i][0][0])
-        F11 = MinMaxScaler().fit_transform(featureList[i][0][1])
-        F20 = MinMaxScaler().fit_transform(featureList[i + 1][0][0])
-        F21 = MinMaxScaler().fit_transform(featureList[i + 1][0][1])
-        print('i - ', i, 'featureList', featureList[i][1], ' F10 ', F10, ' f20 ', F20, ' F11 ', F11, ' f21 ', F21)
-        axes[0][0].plot(F10, F20, 'ro')
-        axes[0][0].plot(F11, F21, 'bs')
-        axes[0][0].axis([0, 1, 0, 1])
-        '''
-        for i in range(0,n-1):
+        fig, axes = plt.subplots(1, n, sharex=True, figsize=(n*4, 3), squeeze=False)
+
+        for i in range(n):
             F10=MinMaxScaler().fit_transform(featureList[i][0][0])
             F11 =MinMaxScaler().fit_transform(featureList[i][0][1])
             F20=MinMaxScaler().fit_transform(featureList[i+1][0][0])
             F21 =MinMaxScaler().fit_transform(featureList[i+1][0][1])
 
-            print('i - ',i,'featureList',featureList[i][1],' F10 ',F10,' f20 ',F20,' F11 ',F11,' f21 ',F21)
-            axes[0][i-1].plot(F10, F11, 'ro')
-            axes[0][i-1].plot(F20, F21, 'bs')
-            axes[0][0].axis([0, 1, 0, 1])
-        '''
+            axes[0][i-1].plot(F10, F20, 'ro')
+            axes[0][i-1].plot(F11, F21, 'bs')
+            axes[0][i-1].axis([0, 1, 0, 1])
+            prn='Feature'+str(i-1)+' VS '+'Feature'+str(i)
+            axes[0][i-1].set_title(prn)
+
         fig.tight_layout()
         self.addScrollingFigure(fig, frameScatPlot)
         self.changeSize(fig,0.8)
