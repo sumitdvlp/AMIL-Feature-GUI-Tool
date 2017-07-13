@@ -162,19 +162,22 @@ class Adder(ttk.Frame):
         self.draw_Scatt_Plot(frameScatPlot,featureList,n)
 
     def draw_Scatt_Plot(self,frameScatPlot,featureList,n):
-        fig, axes = plt.subplots(1, n, sharex=True, figsize=(n*4, 3), squeeze=False)
+        fig, axes = plt.subplots(1, n-1, sharex=True, figsize=((n-1)*4, 3), squeeze=False)
 
-        for i in range(n):
+        for i in range(0,n-1):
+
             F10=MinMaxScaler().fit_transform(featureList[i][0][0])
             F11 =MinMaxScaler().fit_transform(featureList[i][0][1])
             F20=MinMaxScaler().fit_transform(featureList[i+1][0][0])
             F21 =MinMaxScaler().fit_transform(featureList[i+1][0][1])
+            print('F10-',F10,'F20-', F20)
+            axes[0][i].plot(F10, F20,'go',label='beningn')
+            axes[0][i].plot(F11, F21,'r^',label='malign')
+            axes[0][i].legend(loc='best')
 
-            axes[0][i-1].plot(F10, F20, 'ro')
-            axes[0][i-1].plot(F11, F21, 'bs')
-            axes[0][i-1].axis([0, 1, 0, 1])
-            prn='Feature'+str(i-1)+' VS '+'Feature'+str(i)
-            axes[0][i-1].set_title(prn)
+            axes[0][i].axis([0, 1, 0, 1])
+            prn='Feature'+str(i+1)+' VS '+'Feature'+str(i+2)
+            axes[0][i].set_title(prn)
 
         fig.tight_layout()
         self.addScrollingFigure(fig, frameScatPlot)
@@ -196,11 +199,9 @@ class Adder(ttk.Frame):
     def changeSize(self,figure, factor):
         global canvas, mplCanvas, interior, interior_id, frame, cwid
         oldSize = figure.get_size_inches()
-        print("old size is", oldSize)
         figure.set_size_inches([factor * s for s in oldSize])
         wi, hi = [i * figure.dpi for i in figure.get_size_inches()]
-        print("new size is", figure.get_size_inches())
-        print("new size pixels: ", wi, hi)
+
         mplCanvas.config(width=wi, height=hi)
         canvas.itemconfigure(cwid, width=wi, height=hi)
         canvas.config(scrollregion=canvas.bbox(Tkconstants.ALL), width=200, height=200)
