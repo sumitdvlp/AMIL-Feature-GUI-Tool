@@ -44,7 +44,7 @@ class Adder(ttk.Frame):
         """Builds GUI."""
         self.root.title('AMIL - Feature Selection Tool')
         self.root.option_add('*tearOff', 'FALSE')
-        self.root.geometry('768x612+300+300')
+        self.root.geometry('800x1000+600+600')
 
         self.grid(column=0, row=0, sticky='nsew')
 
