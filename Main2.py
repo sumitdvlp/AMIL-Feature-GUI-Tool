@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import re
 import pandas as pd
 import sklearn
+import os
 import numpy as np
 import csv
 from skfeature.utility.entropy_estimators import *
@@ -31,6 +32,7 @@ from skfeature.function.statistical_based import t_score
 from skfeature.function.statistical_based import gini_index
 from skfeature.function.statistical_based import chi_square
 from sklearn.preprocessing import StandardScaler
+from skfeature.function.information_theoretical_based import MIM
 from sklearn import preprocessing
 from sklearn.preprocessing import MinMaxScaler
 from skfeature.function.statistical_based import f_score
@@ -38,7 +40,7 @@ from skfeature.function.statistical_based import low_variance
 from skfeature.function.statistical_based import CFS
 from skfeature.function.statistical_based import t_score
 from skfeature.function.sparse_learning_based import RFS
-
+from skfeature.function.wrapper.svm_forward import svm_forward
 
 class FeatureSelect():
     X_train = []
@@ -49,44 +51,66 @@ class FeatureSelect():
     Fe2 = []
     F1 = []
     F2 = []
-    '''
-    myGo = Go.Go()
-    response = "/home/launch/Desktop/Share/response.csv"
-    real_art = "/home/launch/Desktop/Share/real_art.csv"
-    data = "/home/launch/Desktop/Share/data.zip"
-    processedFiles = myGo.processFiles(response, real_art, data)
-    X = processedFiles["data"]
-    y = processedFiles["response"]
-    '''
+    X=[]
+    y=[]
 
-    pdata = pd.read_csv("/media/sf_Share/CEDM_51_Updated_features.csv", header=None)
-    # print(pdata)
-    df = pd.DataFrame(pdata)
-    # print(datafrme)
+    def __init__(self,path):
+        self.read_Data_Method2()
 
-    df_merged = pd.DataFrame()
-    for name, group in df.groupby(0):
-        df_merged = df_merged.append(pd.DataFrame(group.values[:, 1:].reshape(1, -1)))
+    def read_Data_Method2(self):
+        xpath='/home/launch/Desktop/Share/data49 with name/X'
+        ypath='/home/launch/Desktop/Share/data49 with name/y'
 
-    X = df_merged.as_matrix(columns=df_merged.columns[2:])
+        merged =[]
+        data=pd.DataFrame()
+        for file in os.listdir(xpath):
+            filePath=xpath+'/'+file
+            ydata=pd.read_csv(filePath,index_col=None,header=0)
+            merged.append(ydata)
 
-    pdatay = pd.read_csv("/media/sf_Share/y.csv", header=None)
-    # print(pdata)
-    dfy = pd.DataFrame(pdatay)
-    # print(datafrme)
+        data=pd.concat(merged,axis=1)
+        columnName=data.columns.values
 
-    df_mergedy = pd.DataFrame()
-    for name, group in dfy.groupby(0):
-        df_mergedy = df_mergedy.append(pd.DataFrame(group.values[:, 1:].reshape(1, -1)))
+        self.X = data.as_matrix()
+        featureName=columnName.tolist()
 
-    y = df_mergedy.as_matrix(columns=df_mergedy.columns[1:2])
-    np.savetxt("/media/sf_Share/X.csv", X, delimiter=',')
-    np.savetxt("/media/sf_Share/yres.csv", y, delimiter=',')
+        file=os.listdir(ypath)
+        filePath = ypath + '/' + file[0]
+        ydata = pd.read_csv(filePath, index_col=None, header=0)
+
+        self.y=ydata.as_matrix(columns=ydata.columns[1:2])
+
+    def read_Data_Method1(self):
+        pdata = pd.read_csv("/media/sf_Share/CEDM_51_Updated_features.csv", header=None)
+        df = pd.DataFrame(pdata)
+
+        df_merged = pd.DataFrame()
+        for name, group in df.groupby(0):
+            df_merged = df_merged.append(pd.DataFrame(group.values[:, 1:].reshape(1, -1)))
+
+        X = df_merged.as_matrix(columns=df_merged.columns[2:])
+        print(type(X))
+
+        pdatay = pd.read_csv("/media/sf_Share/y.csv", header=None)
+        dfy = pd.DataFrame(pdatay)
+
+        df_mergedy = pd.DataFrame()
+        for name, group in dfy.groupby(0):
+            df_mergedy = df_mergedy.append(pd.DataFrame(group.values[:, 1:].reshape(1, -1)))
+
+        y = df_mergedy.as_matrix(columns=df_mergedy.columns[1:2])
+        print(type(y))
+        #np.savetxt("/media/sf_Share/X.csv", X, delimiter=',')
+        #np.savetxt("/media/sf_Share/yres.csv", y, delimiter=',')
 
     def __init__(self, *args, **kwargs):
         num_fea = 2
         #X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.1, random_state=40)
 
+
+    def svm_forward(self,n):
+        F=svm_forward(self.X,self.y,n)
+        return F
 
     def JMI(self):
         idx = JMI.jmi(self.X, self.y, n_selected_features=2)
@@ -98,13 +122,19 @@ class FeatureSelect():
         return idx,ttestt
 
     def F_SCORE(self):
-
+        print(self.X.shape)
+        print(self.y.shape)
         f = f_score.f_score(self.X, self.y)
         idx=f_score.feature_ranking(f)
         self.F1 = self.X[:, idx.item(0)]
         self.F2 = self.X[:, idx.item(1)]
         ttestt = stats.ttest_ind(self.F1, self.F2)
         return idx
+
+    def get_MIM(self,n):
+        idx=MIM.mim(self.X,self.y)
+
+
 
     def CMIM(self):
         idx = MIM.mim(self.X, self.y, n_selected_features=2)
@@ -140,12 +170,8 @@ class FeatureSelect():
 
     def get_Feature_List(self,idx,nFea):
         ret=[]
-        print('X',self.X)
-        print('idx',idx[1],'\n X',self.X[:,1])
-        print('idx',idx)
         for i in range(0,nFea):
             Feat=self.X[:,idx[i]]
-            print('Feat-',Feat)
             Fe10=[]
             Fe11=[]
             for j in range(len(self.y)):
@@ -159,7 +185,6 @@ class FeatureSelect():
             Fe10=MinMaxScaler().fit_transform(Fe10)
             Fe11=MinMaxScaler().fit_transform(Fe11)
             ttest=ascii(stats.ttest_ind(Fe10,Fe11))
-            print('Fe10---',Fe10,'\nFe11---',Fe11,'\nttest--',ttest)
             m = re.split(r'pvalue=', ttest)
             ttestVal = re.sub(r'\)', '', m[1])
 
@@ -199,10 +224,6 @@ class FeatureSelect():
     def get_ttest(self):
         idx = self.F_SCORE()
         Fs10, Fs20,Fs11,Fs21 = self.get_scaled_values(idx)
-        print('Fs10,Fs11')
-        print(Fs10,Fs11)
-        print('Fs20,Fs21')
-        print(Fs20, Fs21)
         ttest1=stats.ttest_ind(Fs10,Fs11)
         ttest2=stats.ttest_ind(Fs20,Fs21)
         return ttest1,ttest2
