@@ -53,10 +53,19 @@ class FeatureSelect():
     F2 = []
     X=[]
     y=[]
+    featureName=[]
 
     def __init__(self,path):
         self.read_Data_Method2()
 
+    def read_Data_Method3(self):
+        myGo = Go.Go()
+        response = "/home/launch/Desktop/Share/response.csv"
+        real_art = "/home/launch/Desktop/Share/real_art.csv"
+        data = "/home/launch/Desktop/Share/data.zip"
+        processedFiles = myGo.processFiles(response, real_art, data)
+        self.X = processedFiles["data"]
+        self.y = processedFiles["response"]
     def read_Data_Method2(self):
         xpath='/home/launch/Desktop/Share/data49 with name/X'
         ypath='/home/launch/Desktop/Share/data49 with name/y'
@@ -72,13 +81,20 @@ class FeatureSelect():
         columnName=data.columns.values
 
         self.X = data.as_matrix()
-        featureName=columnName.tolist()
+        self.featureName=columnName.tolist()
 
         file=os.listdir(ypath)
         filePath = ypath + '/' + file[0]
         ydata = pd.read_csv(filePath, index_col=None, header=0)
 
-        self.y=ydata.as_matrix(columns=ydata.columns[1:2])
+        #print(ydata.values)
+        self.y=ydata.iloc[:, 0].tolist()
+
+        '''with open(filePath, 'r') as my_file:
+            reader = csv.reader(my_file, delimiter=',')
+            my_list = list(reader)
+            print(type(my_list))
+        self.y=my_list'''
 
     def read_Data_Method1(self):
         pdata = pd.read_csv("/media/sf_Share/CEDM_51_Updated_features.csv", header=None)
@@ -122,8 +138,7 @@ class FeatureSelect():
         return idx,ttestt
 
     def F_SCORE(self):
-        print(self.X.shape)
-        print(self.y.shape)
+
         f = f_score.f_score(self.X, self.y)
         idx=f_score.feature_ranking(f)
         self.F1 = self.X[:, idx.item(0)]
@@ -132,9 +147,10 @@ class FeatureSelect():
         return idx
 
     def get_MIM(self,n):
+        print(self.y)
+        print(type(self.y))
         idx=MIM.mim(self.X,self.y)
-
-
+        return idx
 
     def CMIM(self):
         idx = MIM.mim(self.X, self.y, n_selected_features=2)
@@ -170,6 +186,12 @@ class FeatureSelect():
 
     def get_Feature_List(self,idx,nFea):
         ret=[]
+        featName=[]
+        for n in range(0,nFea):
+            featName.append(self.featureName[idx[n]])
+
+        print(featName)
+
         for i in range(0,nFea):
             Feat=self.X[:,idx[i]]
             Fe10=[]
@@ -193,7 +215,7 @@ class FeatureSelect():
             ReFe1.append(Fe1)
             ReFe1.append(ttestVal)
             ret.append(ReFe1)
-        return ret
+        return ret,featName
 
     def get_scaled_values(self,idx):
 #        self.F1 = self.X[:, idx.item(0)]
