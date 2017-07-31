@@ -53,6 +53,7 @@ class FeatureSelect():
     F2 = []
     X=[]
     y=[]
+    realArt=[]
     featureName=[]
 
     def __init__(self,path):
@@ -90,6 +91,9 @@ class FeatureSelect():
         #print(ydata.values)
         self.y=ydata.iloc[:, 0].tolist()
 
+        for i in range(0,len(self.y)):
+            self.realArt.append(1)
+
         '''with open(filePath, 'r') as my_file:
             reader = csv.reader(my_file, delimiter=',')
             my_list = list(reader)
@@ -123,6 +127,14 @@ class FeatureSelect():
         num_fea = 2
         #X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.1, random_state=40)
 
+    def SFS(self,classifiers):
+        features=np.asarray(self.X)
+        print(len(self.realArt))
+        print(features.shape)
+        myGo=Go.Go()
+        fs=myGo.runUSFS(self.y, self.realArt, features,classifiers)
+        print('fs###################',fs)
+        return fs
 
     def svm_forward(self,n):
         F=svm_forward(self.X,self.y,n)

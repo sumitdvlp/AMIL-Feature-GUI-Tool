@@ -44,7 +44,7 @@ class Adder(ttk.Frame):
         """Builds GUI."""
         self.root.title('AMIL - Feature Selection Tool')
         self.root.option_add('*tearOff', 'FALSE')
-        self.root.geometry('800x1000+600+600')
+        self.root.geometry('900x1000+600+600')
 
         self.grid(column=0, row=0, sticky='nsew')
 
@@ -144,25 +144,28 @@ class Adder(ttk.Frame):
         self.impFeat=self.impFeat.get()
     def collectValues(self):
 
+        self.draw_acc_plot()
+
         frameScatPlot = Frame(self)
-        frameScatPlot.grid(column=0, row=25, columnspan=100, sticky=Tkconstants.NSEW)
+        frameScatPlot.grid(column=0, row=60, columnspan=100, sticky=Tkconstants.NSEW)
         frameScatPlot.rowconfigure(50, weight=100)
         frameScatPlot.columnconfigure(1, weight=1)
 
         frameFeatHist = Frame(self)
-        frameFeatHist.grid(column=0, row=19, columnspan=100, sticky=Tkconstants.NSEW)
+        frameFeatHist.grid(column=0, row=30, columnspan=100, sticky=Tkconstants.NSEW)
         frameFeatHist.rowconfigure(50, weight=100)
         frameFeatHist.columnconfigure(1, weight=1)
 
         n=8
         myG = Main2.FeatureSelect()
+        myG.read_Data_Method2()
         idx = myG.F_SCORE()
-        featureList=myG.get_Feature_List(idx,n)
-        self.draw_Feat_Hist(frameFeatHist,featureList,n)
-        self.draw_Scatt_Plot(frameScatPlot,featureList,n)
+        featureList,featName=myG.get_Feature_List(idx,n)
+        self.draw_Feat_Hist(frameFeatHist,featureList,n,featName)
+        self.draw_Scatt_Plot(frameScatPlot,featureList,n,featName)
 
-    def draw_Scatt_Plot(self,frameScatPlot,featureList,n):
-        fig, axes = plt.subplots(1, n-1, sharex=True, figsize=((n-1)*4, 3), squeeze=False)
+    def draw_Scatt_Plot(self,frameScatPlot,featureList,n,featName):
+        fig, axes = plt.subplots(1, n-1, sharex=True, figsize=((n-1)*6, 3), squeeze=False)
 
         for i in range(0,n-1):
 
@@ -171,26 +174,27 @@ class Adder(ttk.Frame):
             F20=MinMaxScaler().fit_transform(featureList[i+1][0][0])
             F21 =MinMaxScaler().fit_transform(featureList[i+1][0][1])
             print('F10-',F10,'F20-', F20)
-            axes[0][i].plot(F10, F20,'go',label='beningn')
-            axes[0][i].plot(F11, F21,'r^',label='malign')
+            axes[0][i].plot(F10, F20,'go',label='benign')
+            axes[0][i].plot(F11, F21,'r^',label='malignant')
             axes[0][i].legend(loc='best')
 
             axes[0][i].axis([0, 1, 0, 1])
-            prn='Feature'+str(i+1)+' VS '+'Feature'+str(i+2)
+            #prn='Feature'+str(i+1)+' VS '+'Feature'+str(i+2)
+            prn = str(featName[i]) + ' VS ' + str(featName[i + 1])
             axes[0][i].set_title(prn)
 
         fig.tight_layout()
         self.addScrollingFigure(fig, frameScatPlot)
         self.changeSize(fig,0.8)
 
-    def draw_Feat_Hist(self,frame,featureList,n):
+    def draw_Feat_Hist(self,frame,featureList,n,featName):
 
-        fig, ax = plt.subplots(1, n, sharex=True, figsize=(n*4, 3), squeeze=False)
+        fig, ax = plt.subplots(1, n, sharex=True, figsize=(n*6, 3), squeeze=False)
         
         for i in range(0,n):
             feat=featureList[i]
             ax[0][i-1].violinplot(feat[0], showmeans=False, showmedians=True)
-            pri=str(i)+' p-value - ' +str(feat[1])
+            pri=str(featName[i])+' p-value - ' +str(feat[1])
             ax[0][i-1].set_title(pri)
         fig.tight_layout()
         self.addScrollingFigure(fig, frame)
@@ -206,6 +210,43 @@ class Adder(ttk.Frame):
         canvas.itemconfigure(cwid, width=wi, height=hi)
         canvas.config(scrollregion=canvas.bbox(Tkconstants.ALL), width=200, height=200)
         figure.canvas.draw()
+
+    def draw_acc_plot(self):
+        classifiers = []
+        classifiers.append("lda")
+        ttk.Separator(self, orient='horizontal').grid(column=0,row=19, columnspan=4, sticky='ew')
+        txt="Running Sequential Forward Selection for "+ascii(classifiers[0])
+        tit=ttk.Label(self, text=txt)
+        tit.grid(row=21,column=0,sticky='w')
+
+
+        myG = Main2.FeatureSelect()
+        myG.read_Data_Method2()
+        rfs = myG.SFS(classifiers)
+        fs=rfs["bestFeatureSummary"]
+        for i in range(0, len(classifiers)):
+            title = "Sequential Forward Selection using " + classifiers[i]
+            accuracyString = "Overall Accuracy: " + str(fs[i][0][0])
+            accLowClassString = "Accuracy (Low Class): " + str(fs[i][1][0])
+            accHighString = "Accuracy (High Class): " + str(fs[i][2][0])
+
+            bfsShape = fs[i].shape
+            for j in range(3, bfsShape[0]):
+                featureString = "Feature at indice " + str(fs[i][j][0]) + " contributed " + \
+                                str(fs[i][j][1]) + " percentage to accuracy"
+
+        # title = "SummarybestFeatures_"
+        # accuracyString = "Accuracy: "
+        # accLowClassString = "Accuracy (Low Class): "
+        # accHighString = "Accuracy (High Class): "
+
+        tit.grid_forget()
+        ttk.Label(self, text=title).grid(row=21,column=0,sticky='w')
+        ttk.Label(self, text=accuracyString).grid(row=22,column=0,sticky='w')
+        ttk.Label(self, text=accLowClassString).grid(row=23,column=0,sticky='w')
+        ttk.Label(self, text=accHighString).grid(row=24,column=0,sticky='w')
+
+
 
     def addScrollingFigure(self,figure, frame):
         global canvas, mplCanvas, interior, interior_id, cwid
@@ -289,3 +330,12 @@ if __name__ == '__main__':
     root.columnconfigure(1, weight=1)
     Adder(root)
     root.mainloop()
+
+    '''
+    fs is {'bestFeatureSummary': [array([[ 70.37037037,   0.        ],
+       [ 72.        ,   0.        ],
+       [ 68.96551724,   0.        ],
+       [  9.        ,  62.96296296],
+       [ 33.        ,   3.7037037 ],
+       [ 73.        ,   3.7037037 ]])]}
+       '''

@@ -50,6 +50,8 @@ class Go:
     dataFiles = "/data"
     outputFolder = "/output"
     currentPath = ""
+    def __init__(self):
+        print("initt")
 
     def runElasticNet(self, X, y):
         alpha = [str(1e-20), str(1e-19), str(1e-18), str(1e-17), str(1e-16), str(1e-15), str(1e-14), str(1e-13),
@@ -495,8 +497,8 @@ class Go:
                 'subAccMatrix': subAccMatrix, 'preAccMatrix': preAccMatrix, 'preInstOrder': preInstOrder}
 
     def accuracyCalculation(accMatrix, lowClass, instOrder):
-        element1 = 0
-        element2 = 0
+        element1 = 1 #sumit elements 1 nd 2 were initialized to 0
+        element2 = 1
         misclassified1 = 0
         misclassified2 = 0
 
@@ -522,15 +524,25 @@ class Go:
         return {'accuracy': accuracy, 'lowClassAccuracy': lowClassAccuracy, 'highClassAccuracy': highClassAccuracy,
                 'instMisclass': instMisclass}
 
-    def runUSFS(self, response_data, real_art_data, features, classifierType):
+    def runUSFS(self, response_data, real_art_data, features,classifierType):
+
         print("USFS function called\n")
+        features=numpy.asarray(features)
+        print(type(features))
+        print(features)
+        print(features.shape)
+        print('response_data')
+        print(response_data)
+        print('real_art_data')
+        print(real_art_data)
+
+        classifNo = len(classifierType)
+
 
         response_rowNum = len(response_data)
         real_art_rowNum = len(real_art_data)
         realStatus = 1
         cvStatus = 1
-
-        classifNo = len(classifierType)
 
         if cvStatus == 0:
             foldNo = 10
@@ -598,6 +610,7 @@ class Go:
             
             #featureNumTOTAL is equivaluent to PCNumTOTAL
             featShape = features.shape
+            print(featShape)
             featureNumTOTAL = featShape[1]
             featureIndexNumbers = numpy.zeros((featureNumTOTAL, 1))
             for i in range(0, featureNumTOTAL):
@@ -783,8 +796,10 @@ class Go:
                 accIncr[z2][z1] = accIncrTracker
                 # FIX: 3d array where you can replace a whole column
                 shapeSubjMisclassified = subjMisclassified[z2].shape
-                for c in range(0, shapeSubjMisclassified[0]):
-                    subjMisclassified[z2][c][1 + z1] = finalInstMisclass[c]
+                print(shapeSubjMisclassified)
+                #for c in range(0, shapeSubjMisclassified[0]):
+                    #print("z2=",z2,"c-",c,"z1-",z1)
+                    #subjMisclassified[z2][c][1 + z1] = finalInstMisclass[c]
 
         maxVal = numpy.zeros(classifNo)
         for i in range(0, classifNo):
@@ -809,8 +824,9 @@ class Go:
                     bestFeaturesummary[j][x][i] = bestFeatures[j][i][k]
                     bestFeaturesummary[j][x][i + iterationLength] = accIncr[j][i][k]
                     x += 1
-        os.chdir(Go.currentPath + Go.dataFiles + Go.outputFolder)
-        for i in range(0, classifNo):
+        ##os.chdir(Go.currentPath + Go.dataFiles + Go.outputFolder)
+        ## sumit comment
+        '''for i in range(0, classifNo):
             summary_string = 'SummarybestFeatures_' + classifierType[i] + '.csv'
             misclassified_string = 'MisclassifiedSubjects_' + classifierType[i] + '.csv'
             file3 = open(summary_string, 'wb')
@@ -818,7 +834,7 @@ class Go:
             numpy.savetxt(file3, bestFeaturesummary[i], delimiter=',')
             numpy.savetxt(file4, subjMisclassified[i], delimiter=',')
             file3.close()
-            file4.close()
+            file4.close()'''
 
         return {"bestFeatureSummary": bestFeaturesummary}
 
